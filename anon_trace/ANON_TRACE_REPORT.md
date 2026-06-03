@@ -120,7 +120,61 @@ Two views. **"Swap PnL"** = realized cash from DEX swaps only — cash received 
 
 ---
 
-## 7. Methodology & caveats
+## 7. The bridge: ANON enters Solana from Sonic via LayerZero (cross-chain origin)
+
+The ANON in this cluster did **not** originate natively on Solana — it was **bridged in from Sonic via the LayerZero OFT**, and the Solana mint is a mint-and-burn OFT.
+
+**Solana-side OFT infrastructure (confirmed on-chain):**
+- ANON mint authority `5AAcqakSbTFjXhRDfrczyn1Gz12EcKPkrJZHgfEANprv` is a **1-of-1 SPL multisig** whose sole signer is the PDA `8SQ1Uj92fSiKnu7Ydo81CMEWx1DkrubLrRYL9HqPh2oq`, owned by the **LayerZero OFT program `A1oayh35gLkRG8fHcXtfdGJmbsubAeJA7URVVET3h8MZ`**. Every Solana bridge-in **mints** new ANON to the recipient (that PDA is also the LayerZero `receiver`). The mint authority account has **48,061 transactions** — i.e. tens of thousands of bridge-in mints.
+- Filtering those mints to our cluster shows the seeds were **bridge-minted**, not created on Solana:
+  - **`7Mad6X…`** received **446,153 ANON via OFT mints on 2025-10-11/12**, then forwarded the *exact same* 446,153 to the hub `6LY1Jz` — a 1:1 bridge→hub relay.
+  - **`3Ea1u3vw…`** was bridge-minted ~330k ANON (Jun–Jul 2025) → fed `FWznb` → hub.
+  - **`W1` itself** received a **60,699 ANON bridge-mint on 2026-04-11** (this is the "unresolved/blank source" flagged in §2).
+
+**LayerZero pathway (from LayerZero Scan):**
+- **Source chain EID `30332` = Sonic** → **Destination EID `30168` = Solana**, status `DELIVERED`.
+- Source OFT contract on Sonic: **`0x79bbf4508b1391af3a0f4b30bb5fc4aa9ab0e07c`** (symbol `Anon`, "HeyAnon").
+- Example matched messages (Solana mint ⇐ Sonic `send`):
+
+| Solana mint → | Sonic source tx | Sonic sender (EOA) |
+|---|---|---|
+| 7Mad6X 100k (2025-10-12) | `0x33e34c67…646ae4` | `0xd3f62ccbe87abf905c6611a524d76e6069883350` |
+| 3Ea1u3vw 60k (2025-07-05) | `0x2d024865…bdc8e0` | `0x6fdb03ec52932c0bbb48f1367c7739480e78b785` |
+| W1 60,699 (2026-04-11) | `0x63448db2…879abc` | `0xeec6547e1fd30b1b995c63c4937c58c73603c47c` |
+
+## 8. EVM (Sonic) side — where the bridged ANON came from
+
+Tracing the three Sonic senders' incoming ANON ERC-20 transfers (chunked `eth_getLogs` on Sonic, chainId 146):
+
+- **`0xd3f62c…`** (→ 7Mad6X): received **5.46M ANON** total, dominated by **`0xe453c128f9fa860960913f40ef975b1fe5621e9e` = Silo Finance** ("Borrowable Anon Deposit, SiloId 27" / `bAnon-27`) — i.e. an ANON **lending market**.
+- **`0x6fdb03…`** (→ 3Ea1u3vw): received **~3.6M ANON**, again #1 from **Silo Finance** (1.30M), plus large amounts from Sonic **AMM pool/router contracts** (`0x34fee989…`, `0xb0d458bf…`, `0x4c73dcbc…`, `0x297000941…` — all the same 44,224-byte AMM bytecode).
+- **`0xeec654…`** (→ W1): received ANON again #1 from **Silo Finance** (100k) + a DEX pool.
+
+All three Sonic senders also show some **OFT mints from `0x0`** (ANON bridged *into* Sonic from another chain by the same operators), but the **dominant, recurring source is the native HeyAnon DeFi stack on Sonic — Silo Finance lending markets and Sonic AMM pools/routers**.
+
+**Full origin chain (both sides):**
+
+```
+SONIC (EVM, chainId 146)
+  Silo Finance ANON market 0xe453c128…  +  Sonic AMM pools/routers (0x2970…, 0x34fee9…, 0xb0d458…)
+        │  (borrow / swap ANON)
+        ▼
+  bridge-operator EOAs  0xd3f62c… , 0x6fdb03… , 0xeec654…
+        │  LayerZero OFT send  (OFT 0x79bbf4…, srcEID 30332 → dstEID 30168)
+        ▼
+SOLANA  — OFT mint (program A1oayh35…, mint-auth multisig 5AAcqak…)
+  bridge-receivers  7Mad6X… , 3Ea1u3vw… , (W1 directly)
+        │  SPL transfer
+        ▼
+  MM network  FWznb… / EFE3j1… / 26hBWMo…
+        │
+        ▼
+  HUB  6LY1Jz…  ──(50k seed each, 2026-03-23)──►  W1…W9
+```
+
+**So the user's premise is confirmed:** the cluster's ANON **originates on Sonic**, where it was sourced through HeyAnon's own DeFi (Silo lending + Sonic DEXes), then **bridged to Solana over LayerZero** (Sonic→Solana OFT), minted to a handful of bridge-receiver wallets, consolidated at the `6LY1Jz` hub, and seeded out to the 9 wallets.
+
+## 9. Methodology & caveats
 
 - Pulled full Enhanced (parsed) transaction history for all 9 wallets and for the key upstream ANON token accounts via Helius. Net ANON/SOL/USDC per transaction computed from `accountData.nativeBalanceChange` + `tokenBalanceChanges` (owner-resolved), which correctly nets multi-hop Jupiter routes.
 - "Transfer" counterparties are resolved to the **owner** account; flows to/from `EYy5` (Raydium CLMM) and `Dab466` (governance) are protocol interactions, not peer wallets.
