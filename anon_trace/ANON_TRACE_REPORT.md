@@ -174,6 +174,38 @@ SOLANA  — OFT mint (program A1oayh35…, mint-auth multisig 5AAcqak…)
 
 **So the user's premise is confirmed:** the cluster's ANON **originates on Sonic**, where it was sourced through HeyAnon's own DeFi (Silo lending + Sonic DEXes), then **bridged to Solana over LayerZero** (Sonic→Solana OFT), minted to a handful of bridge-receiver wallets, consolidated at the `6LY1Jz` hub, and seeded out to the 9 wallets.
 
+## 10. Definitive per-wallet acquisition: MINTED vs BOUGHT vs TRANSFERRED — and buy PnL
+
+For every wallet, each ANON **inflow** was classified at the instruction level into one of four buckets. Crucially, two "sources" turned out to be **not genuine inflows**: (a) the **governance escrow nets to 0** (same-day stake→unstake round-trip on 2026-04-19), and (b) the **Raydium CLMM pool nets negative for every wallet** (each wallet is a *net LP provider* — the pool is a sink, so "received from pool" is just the wallet withdrawing its own ANON / collecting fees). Also, ~1,000 of the "swaps" were actually **zero-cost LP-fee/reward claims** (Helius labels them `SWAP`); only swaps where the wallet *paid* SOL/USDC are counted as **BOUGHT**.
+
+So the only **genuine origins** of each wallet's ANON are: **(1) hub seed** (a transfer, but the ANON itself was bridged from Sonic), **(2) direct bridge-mint** from Sonic, **(3) genuine DEX buys**, and **(4) LP-fee/reward claims**.
+
+| W | Seed from hub `6LY1Jz` (transfer; bridged-origin) | Direct bridge-MINT (Sonic→Solana) | BOUGHT on DEX | Buy cost | LP-fee CLAIMS (free) | Sold on DEX → proceeds | **Net DEX cash (PnL)** | Holds now | Holds $ |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| **W1** | 49,000 | **60,699** | 7,462 | **$4,161** | 18,221 | 102 → $110 | **−$4,051** | 28,413 | $13,158 |
+| **W2** | 50,000 | 0 | 598 | $315 | 9,637 | 229 → $202 | −$113 | 598 | $277 |
+| **W3** | 50,000 | **50,000** | 6,594 | **$4,864** | 7,972 | 128 → $114 | **−$4,750** | 213 | $99 |
+| **W4** | 50,000 | 0 | 1,055 | $563 | 9,869 | 151 → $131 | −$432 | 1,056 | $489 |
+| **W5** | 50,000 | 0 | 0 | $0 | 15,218 | 550 → $465 | +$465 | 0 | $0 |
+| **W6** | 50,000 | 0 | 211 | $113 | 14,234 | 675 → $588 | +$475 | 212 | $98 |
+| **W7** | 317,210 | 0 | 7,812 | $3,755 | 0 | 317,469 → $32,286 | **+$28,530** | 0 | $0 |
+| **W8** | 50,000 | 0 | 631 | $338 | 14,114 | 675 → $588 | +$250 | 631 | $292 |
+| **W9** | 50,000 | 0 | 908 | $488 | 0 | 675 → $589 | +$101 | 908 | $421 |
+| **SUM** | ~716,210 | **110,699** | 25,270 | **$14,598** | 89,265 | → $35,073 | **+$20,475** | — | $14,834 |
+
+**Answers to "bought or minted or transferred?":**
+- **Transferred (then bridged-origin):** the dominant route. ~716k ANON arrived as the hub seed; that ANON was itself **bridge-minted from Sonic** (hub fed by bridge-receivers 7Mad6X / 3Ea1u3vw). So it is *transferred to the wallet, minted at origin.*
+- **Minted directly to the wallet (bridge from Sonic):** only **W1 (60,699 on 2026-04-11)** and **W3 (50,000 on 2026-04-11)**. No other wallet received a direct bridge-mint.
+- **Bought (genuine DEX purchase):** small for everyone — cluster total **25,270 ANON for $14,598**. Biggest single buyer is **W7 (7,812 ANON for 50 SOL / $3,755)**; W1 and W3 also spent ~$4–5k (largely in USDC).
+- **LP-fee/reward claims (free):** ~89k ANON across the wallets — this is what the "100–150 tiny swaps" actually were.
+
+**Buy PnL (DEX cash flow = sell proceeds − buy cost):**
+- **W7: +$28,530** — the cluster's sell leg. Bought 7,812 for $3,755, sold 317k (its seed) for $32,286.
+- **W5/W6/W8/W9: small positive** (+$101 to +$475) — sold a bit more than they bought.
+- **W1: −$4,051 and W3: −$4,750** — net *accumulators*; they spent cash buying and barely sold. W1 still holds 28,413 ANON ($13.2k) so it is up on an unrealized basis; W3 sold/sent most of its inventory so its cash position is a genuine drawdown.
+- **W2/W4: small negative** (−$113 / −$432) — minor net buyers.
+- **Cluster net realized DEX cash: +$20,475**, almost entirely W7. Including the $14,834 of ANON still held, mark-to-market net is ~+$35.3k — but remember the bulk of inventory was **free** (bridged seed + mints + LP fees), not purchased.
+
 ## 9. Methodology & caveats
 
 - Pulled full Enhanced (parsed) transaction history for all 9 wallets and for the key upstream ANON token accounts via Helius. Net ANON/SOL/USDC per transaction computed from `accountData.nativeBalanceChange` + `tokenBalanceChanges` (owner-resolved), which correctly nets multi-hop Jupiter routes.
