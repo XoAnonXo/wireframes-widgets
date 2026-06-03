@@ -206,6 +206,50 @@ So the only **genuine origins** of each wallet's ANON are: **(1) hub seed** (a t
 - **W2/W4: small negative** (−$113 / −$432) — minor net buyers.
 - **Cluster net realized DEX cash: +$20,475**, almost entirely W7. Including the $14,834 of ANON still held, mark-to-market net is ~+$35.3k — but remember the bulk of inventory was **free** (bridged seed + mints + LP fees), not purchased.
 
+## 11. The true ORIGIN — ANON genesis on Sonic (2024-12-14)
+
+Silo and the DEX pools are not the origin — they are just where the bridge operators *picked up* ANON that already existed. Tracing the Sonic ERC-20 to its genesis:
+
+- **Sonic is ANON's canonical/home chain.** The token `0x79bbf4508b1391af3a0f4b30bb5fc4aa9ab0e07c` is a **self-referential mint/burn LayerZero OFT**; its **entire supply was minted once on Sonic**, and every other chain (Solana included) is a bridged mint/burn representation.
+- **Genesis mint:** at Sonic block **406,529 — 2024-12-14 15:24 UTC** — the deployer EOA **`0x8054a4fbd093808af4529187d3efb9f6301ab92f`** created the contract and minted the **entire 21,000,000 ANON supply** to itself (tx `0xf1369d28…26db1a`).
+- The deployer immediately moved **all 21,000,000 → the HeyAnon treasury Safe `0xb3fc32de77d62a35621e48ddf1aac8c24be215a6`** (this is also the token's `owner()`).
+
+**Origin distribution from the treasury `0xb3fc32de…`** (it still holds **7.10M**, ~34% of supply):
+
+| To | ANON | What it is |
+|----|-----:|-----------|
+| `0xca420d5ee2ec23d4b46e15f9134a389d2b29d8eb` | **10,500,000** (50%) | distributor/streaming contract (received half the supply, now emptied → airdrop / LP-bootstrap / staking rewards) |
+| `0xa930ed3e952fd98035518da7ea13a2d0b1dab6bd` | 1,050,000 (5%) | another team Safe (emptied) |
+| `0x297000941c155962b04760ecaeaa422757f20bc1` | 259,419 | **initial DEX liquidity** (the same pool/router the bridge operators later bought ANON from) |
+| ~12 wallets | 100k–150k each | team / market-maker / investor allocations |
+| `0x0` (burn) | 161,300 | bridged out to other chains via LayerZero |
+| (retained) | 7,101,391 | treasury reserve |
+
+**Full origin → Solana chain (start to finish):**
+
+```
+ORIGIN: 2024-12-14, Sonic block 406,529
+  deployer 0x8054a4fb…  ── mint 21,000,000 ANON (entire supply) ──►  treasury Safe 0xb3fc32de…
+        │
+        ├─► distributor 0xca420d5e… (10.5M)  ─► airdrop/LP/staking ─┐
+        ├─► DEX pool/router 0x297000941… (259k initial liquidity)   │
+        ├─► team/MM/investor Safes (100k–1.05M each)                │
+        └─► (retains 7.1M)                                          │
+                                                                    ▼
+            Sonic DeFi venues:  Silo Finance ANON market 0xe453c128…  +  Sonic AMM pools
+                                                                    │  (borrow / swap)
+                                                                    ▼
+            bridge-operator EOAs  0xd3f62c… , 0x6fdb03… , 0xeec654…
+                                                                    │  LayerZero OFT send (EID 30332 Sonic → 30168 Solana)
+                                                                    ▼
+            SOLANA OFT mint (prog A1oayh35…)  →  receivers 7Mad6X… / 3Ea1u3vw… / (W1 direct)
+                                                                    │
+                                                                    ▼
+            MM net (FWznb/EFE3j1/26hBWMo)  →  HUB 6LY1Jz…  ──(50k seed each, 2026-03-23)──►  W1…W9
+```
+
+**So the origin of every ANON in the 9 wallets is the single 21,000,000-token genesis mint on Sonic (2024-12-14) controlled by the HeyAnon deployer `0x8054a4fb…` / treasury Safe `0xb3fc32de…`.** From the treasury it flowed into DEX liquidity and the Silo lending market, was bought/borrowed there by a few operator EOAs, and bridged via LayerZero to Solana — where it was minted, consolidated at the `6LY1Jz` hub, and seeded to the cluster. The "mint" on the Solana side is therefore a *bridge representation*; the real issuance event is this Sonic genesis.
+
 ## 9. Methodology & caveats
 
 - Pulled full Enhanced (parsed) transaction history for all 9 wallets and for the key upstream ANON token accounts via Helius. Net ANON/SOL/USDC per transaction computed from `accountData.nativeBalanceChange` + `tokenBalanceChanges` (owner-resolved), which correctly nets multi-hop Jupiter routes.
